@@ -8,8 +8,11 @@ const { getAllItems,
     updateItem,
     deleteItem, } = require('../controllers/item')
 const {isAuthenticatedUser} = require('../middlewares/auth')
+
+router.get('/items', getAllItems);
 router.get('/items', isAuthenticatedUser,  getAllItems)
 router.get('/items/:id', getSingleItem)
+
 
 router.post('/items', isAuthenticatedUser, upload.array('image', 10), createItem);
 router.put('/items/:id', isAuthenticatedUser, upload.array('image', 10), updateItem);

@@ -60,51 +60,39 @@ const loginUser = (req, res) => {
 };
 
 const updateUser = (req, res) => {
-
-  console.log(req.body, req.file)
-  const { title, fname, lname, addressline, town, zipcode, phone, userId, } = req.body;
-  
+  const { name, address, phone, userId } = req.body;
   let image = null;
+
   if (req.file) {
     image = req.file.path.replace(/\\/g, "/");
   }
-  
-  const userSql = `
-  INSERT INTO customer 
-    (title, fname, lname, addressline, town, zipcode, phone, image_path, user_id)
-  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-  ON DUPLICATE KEY UPDATE 
-    title = VALUES(title),
-    fname = VALUES(fname),
-    lname = VALUES(lname),
-    addressline = VALUES(addressline),
-    town = VALUES(town),
-    zipcode = VALUES(zipcode),
-    phone = VALUES(phone),
-    image_path = VALUES(image_path)`;
-  const params = [title, fname, lname, addressline, town, zipcode, phone, image, userId];
 
-  try {
-    connection.execute(userSql, params, (err, result) => {
-      if (err instanceof Error) {
-        console.log(err);
+  // Build the base SQL dynamically depending on image presence
+  let sql = `
+    UPDATE users 
+    SET name = ?, 
+        address = ?, 
+        phone = ?`;
 
-        return res.status(401).json({
-          error: err
-        });
-      }
+  const params = [name, address, phone];
 
-      return res.status(200).json({
-        success: true,
-        message: 'profile updated',
-        result
-      })
-    });
-  } catch (error) {
-    console.log(error)
+  if (image) {
+    sql += `, image_path = ?`;
+    params.push(image);
   }
 
+  sql += ` WHERE id = ?`;
+  params.push(userId);
+
+  connection.execute(sql, params, (err, result) => {
+    if (err) {
+      console.log(err);
+      return res.status(500).json({ error: 'Error updating user', details: err });
+    }
+    return res.status(200).json({ success: true, message: 'Profile updated', result });
+  });
 };
+
 
 
 
@@ -140,7 +128,7 @@ const deactivateUser = (req, res) => {
 };
 
 const getAllUsers = (req, res) => {
-  const sql = 'SELECT id, name, email, role, is_active, created_at FROM users';
+  const sql = 'SELECT id, name,address, phone, email, role, is_active, created_at FROM users';
   connection.execute(sql, (err, results) => {
     if (err) {
       return res.status(500).json({ error: 'Error fetching users', details: err });

@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin - Manage Users</title>
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+  <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+  <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body>
+  <h2>User Management</h2>
+  <table id="usersTable" class="display" style="width:100%">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Name</th>
+        <th>Email</th>
+        <th>Role</th>
+        <th>Active</th>
+        <th>Created</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+  </table>
+
+  <script>
+  const url = 'http://localhost:4000/';
+
+  $(document).ready(function () {
+    $('#usersTable').DataTable({
+      ajax: {
+        url: `${url}api/v1/users`,
+        dataSrc: 'data'
+      },
+      columns: [
+        { data: 'id' },
+        { data: 'name' },
+        { data: 'email' },
+        { data: 'role' },
+        {
+          data: 'is_active',
+          render: function (data) {
+            return data == 1 ? 'Yes' : 'No';
+          }
+        },
+        { data: 'created_at' },
+        {
+          data: null,
+          render: function (data, type, row) {
+            const roleDropdown = `
+              <select onchange="updateRole(${data.id}, this.value)">
+                <option value="admin" ${data.role === 'admin' ? 'selected' : ''}>admin</option>
+                <option value="customer" ${data.role === 'customer' ? 'selected' : ''}>customer</option>
+              </select>
+            `;
+
+            const actionButton = data.is_active == 1
+              ? `<button onclick="deactivateUser(${data.id})">Deactivate</button>`
+              : `<button onclick="activateUser(${data.id})">Reactivate</button>`;
+
+            return `${roleDropdown}<br>${actionButton}`;
+          }
+        }
+      ]
+    });
+  });
+
+  function updateRole(userId, role) {
+    $.ajax({
+      method: 'POST',
+      url: `${url}api/v1/update-role`,
+      contentType: 'application/json',
+      data: JSON.stringify({ userId, role }),
+      success: function (res) {
+        Swal.fire('Success', 'Role updated', 'success');
+        $('#usersTable').DataTable().ajax.reload();
+      },
+      error: function (err) {
+        console.log(err);
+        Swal.fire('Error', 'Failed to update role', 'error');
+      }
+    });
+  }
+
+  function deactivateUser(userId) {
+  Swal.fire({
+    title: 'Are you sure?',
+    text: 'This will deactivate the user.',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonText: 'Yes, deactivate!'
+  }).then((result) => {
+    if (result.isConfirmed) {
+      $.ajax({
+        method: 'POST',
+        url: `${url}api/v1/soft-delete`, 
+        contentType: 'application/json',
+        data: JSON.stringify({ userId }),
+        success: function (res) {
+          Swal.fire('Deactivated!', 'User is now inactive.', 'success');
+          $('#usersTable').DataTable().ajax.reload();
+        },
+        error: function (err) {
+          console.log(err);
+          Swal.fire('Error', 'Failed to deactivate user', 'error');
+        }
+      });
+    }
+  });
+}
+
+
+  function activateUser(userId) {
+    Swal.fire({
+      title: 'Reactivate user?',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, reactivate'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        $.ajax({
+          method: 'POST',
+          url: `${url}api/v1/activate`,
+          contentType: 'application/json',
+          data: JSON.stringify({ userId }),
+          success: function (res) {
+            Swal.fire('Reactivated!', 'User is now active.', 'success');
+            $('#usersTable').DataTable().ajax.reload();
+          },
+          error: function (err) {
+            console.log(err);
+            Swal.fire('Error', 'Failed to reactivate user', 'error');
+          }
+        });
+      }
+    });
+  }
+</script>
+
+</body>
+</html>

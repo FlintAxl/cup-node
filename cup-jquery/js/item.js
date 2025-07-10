@@ -17,7 +17,7 @@ $(document).ready(function () {
     const table = $('#itable').DataTable({
         ajax: {
             url: `${url}api/v1/items`,
-            dataSrc: "rows",
+            dataSrc: "data",
             headers: {
                 "Authorization": `Bearer ${token}`
             }
@@ -39,11 +39,16 @@ $(document).ready(function () {
         columns: [
             { data: 'item_id' },
             {
-                data: null,
-                render: function (data) {
-                    return `<img src="${url}${data.image}" width="50" height="60">`;
+            data: 'images',
+            render: function (images) {
+                if (!images || images.length === 0) {
+                return 'No image';
                 }
-            },
+
+                return images.map(img => `<img src="${url}${img}" width="50" height="50" style="margin-right:5px;">`).join('');
+            }
+            }
+,           { data: 'pname' },
             { data: 'description' },
             { data: 'cost_price' },
             { data: 'sell_price' },
@@ -117,11 +122,18 @@ $(document).ready(function () {
             dataType: "json",
             success: function (data) {
                 const { result } = data;
+                $('#pname').val(result[0].pname);
                 $('#desc').val(result[0].description);
                 $('#sell').val(result[0].sell_price);
                 $('#cost').val(result[0].cost_price);
                 $('#qty').val(result[0].quantity);
-                $("#iform").append(`<img src="${url}${result[0].image}" width='200px' height='200px' id="itemImage" />`);
+                if (result[0].images) {
+                const images = result[0].images.split(',');
+                images.forEach((img, index) => {
+                    $("#iform").append(`<img src="${url}${img}" width='100px' height='100px' style="margin:5px;" class="itemImagePreview" />`);
+                });
+                }
+
             },
             error: function (error) {
                 console.log(error);

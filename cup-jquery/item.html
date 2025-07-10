@@ -121,7 +121,9 @@
           <thead>
             <tr>
               <th>item ID</th>
+              
               <th>Image</th>
+              <th>product name</th>
               <th>description</th>
               <th>sell price</th>
               <th>cost price</th>
@@ -149,6 +151,15 @@
           </div>
           <div class="modal-body">
             <form id="iform">
+              <div class="form-group">
+                <label for="pname" class="control-label">Product Name</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="pname"
+                  name="pname"
+                />
+              </div>
               <div class="form-group">
                 <label for="desc" class="control-label">Description</label>
                 <input
@@ -187,7 +198,7 @@
               </div>
               <div class="form-group">
                 <label for="img" class="control-label">Image</label>
-                <input type="file" class="form-control" id="img" name="image" />
+                <input type="file" class="form-control" id="img" name="image" multiple />
               </div>
             </form>
           </div>

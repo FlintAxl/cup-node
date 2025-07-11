@@ -198,6 +198,27 @@ const activateUser = (req, res) => {
   });
 };
 
+const getUserProfile = (req, res) => {
+  const { userId } = req.query;
+
+  if (!userId) {
+    return res.status(400).json({ error: 'User ID is required' });
+  }
+
+  const sql = 'SELECT id, name, address, phone, email, image_path FROM users WHERE id = ? AND deleted_at IS NULL';
+  connection.execute(sql, [userId], (err, results) => {
+    if (err) {
+      return res.status(500).json({ error: 'Error fetching user profile', details: err });
+    }
+
+    if (results.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    return res.status(200).json({ success: true, user: results[0] });
+  });
+};
 
 
-module.exports = { registerUser, loginUser, updateUser, deactivateUser, getAllUsers, updateUserRole, softDeleteUser, activateUser };
+
+module.exports = { registerUser, loginUser, updateUser, deactivateUser, getAllUsers, updateUserRole, softDeleteUser, activateUser, getUserProfile };

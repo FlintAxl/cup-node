@@ -1,4 +1,5 @@
-$(document).ready(function () {
+$(document).ready(function () 
+    {
     const url = 'http://localhost:4000/';
 
     const getToken = () => {
@@ -188,7 +189,32 @@ $(document).ready(function () {
         });
     });
 
-    
+        const loadUserProfile = () => {
+    const userId = JSON.parse(sessionStorage.getItem('userId'));
+    if (!userId) return;
+
+    $.ajax({
+        method: "GET",
+        url: `${url}api/v1/profile?userId=${userId}`,
+        dataType: "json",
+        success: function (response) {
+        const user = response.user;
+        $("#name").val(user.name);
+        $("#address").val(user.address);
+        $("#phone").val(user.phone);
+
+        if (user.image_path) {
+            $("#avatarPreview").attr("src", `${url}${user.image_path}`).show();
+        }
+        },
+        error: function (err) {
+        console.log("Error loading user profile:", err);
+        }
+    });
+    };
+
+    loadUserProfile(); // call it immediately on page load
+
 
 
 })

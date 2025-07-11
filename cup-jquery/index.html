@@ -112,7 +112,8 @@
                 <p><strong>${item.pname || 'No Name'}</strong></p>
                 <p>${item.description}</p>
                 <p><strong>₱${item.sell_price}</strong></p>
-                <button onclick="event.stopPropagation(); orderItem(${item.item_id})">Order</button>
+                <button onclick="event.stopPropagation(); addToCart(${item.item_id}, '${item.pname}', ${item.sell_price})">Add to Cart</button>
+                <button onclick="event.stopPropagation(); orderItem(${item.item_id})">Order Now</button>
               </div>
             `);
           });
@@ -127,7 +128,11 @@
     function orderItem(id) {
       alert('Ordering item ID: ' + id);
     }
+  
   </script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="js/order.js"></script>
+  <script src="js/cart.js"></script>
 
 </body>
 </html>

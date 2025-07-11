@@ -63,3 +63,42 @@ exports.createOrder = (req, res) => {
     });
   });
 };
+
+
+exports.getCustomerOrders = (req, res) => {
+  const customer_id = req.params.customer_id;
+
+  const sql = `
+    SELECT 
+      o.order_id, o.date_placed, o.status,
+      GROUP_CONCAT(CONCAT(i.pname, ' x', ol.quantity) SEPARATOR ', ') AS items,
+      SUM(i.sell_price * ol.quantity) AS total_price
+    FROM orderinfo o
+    JOIN orderline ol ON o.order_id = ol.orderinfo_id
+    JOIN item i ON ol.item_id = i.item_id
+    WHERE o.customer_id = ?
+    GROUP BY o.order_id
+    ORDER BY o.date_placed DESC
+  `;
+
+  connection.query(sql, [customer_id], (err, result) => {
+    if (err) return res.status(500).json({ error: 'Failed to fetch orders', details: err });
+    res.status(200).json({ data: result });
+  });
+};
+
+exports.cancelOrder = (req, res) => {
+  const { order_id } = req.body;
+
+  const sql = `UPDATE orderinfo SET status = 'cancelled' WHERE order_id = ? AND status = 'pending'`;
+
+  connection.query(sql, [order_id], (err, result) => {
+    if (err) return res.status(500).json({ error: 'Failed to cancel order', details: err });
+
+    if (result.affectedRows === 0) {
+      return res.status(400).json({ error: 'Order not found or already processed' });
+    }
+
+    res.status(200).json({ success: true, message: 'Order cancelled' });
+  });
+};

@@ -1,6 +1,12 @@
-$(document).ready(function () {
-  const url = 'http://localhost:4000/';
+const url = 'http://localhost:4000/';
 
+$(document).ready(function () {
+  initUsersTable();
+  initOrdersTable();
+});
+
+
+function initUsersTable() {
   $('#usersTable').DataTable({
     ajax: {
       url: `${url}api/v1/users`,
@@ -15,9 +21,7 @@ $(document).ready(function () {
       { data: 'role' },
       {
         data: 'is_active',
-        render: function (data) {
-          return data == 1 ? 'Yes' : 'No';
-        }
+        render: data => (data == 1 ? 'Yes' : 'No')
       },
       { data: 'created_at' },
       {
@@ -38,21 +42,19 @@ $(document).ready(function () {
       }
     ]
   });
-});
+}
 
-// ✅ Properly send JSON with contentType and stringify
 function updateRole(userId, role) {
   $.ajax({
     method: 'POST',
-    url: 'http://localhost:4000/api/v1/update-role',
+    url: `${url}api/v1/update-role`,
     contentType: 'application/json',
     data: JSON.stringify({ userId, role }),
-    success: function (res) {
+    success: function () {
       Swal.fire('Success', 'Role updated successfully', 'success');
       $('#usersTable').DataTable().ajax.reload();
     },
-    error: function (err) {
-      console.error(err);
+    error: function () {
       Swal.fire('Error', 'Failed to update role', 'error');
     }
   });
@@ -64,19 +66,18 @@ function deactivateUser(userId) {
     icon: 'warning',
     showCancelButton: true,
     confirmButtonText: 'Yes, deactivate'
-  }).then((result) => {
+  }).then(result => {
     if (result.isConfirmed) {
       $.ajax({
         method: 'POST',
-        url: 'http://localhost:4000/api/v1/soft-delete',
+        url: `${url}api/v1/soft-delete`,
         contentType: 'application/json',
         data: JSON.stringify({ userId }),
         success: function () {
           Swal.fire('Deactivated', 'User is now inactive', 'success');
           $('#usersTable').DataTable().ajax.reload();
         },
-        error: function (err) {
-          console.error(err);
+        error: function () {
           Swal.fire('Error', 'Failed to deactivate user', 'error');
         }
       });
@@ -90,22 +91,23 @@ function activateUser(userId) {
     icon: 'question',
     showCancelButton: true,
     confirmButtonText: 'Yes, reactivate'
-  }).then((result) => {
+  }).then(result => {
     if (result.isConfirmed) {
       $.ajax({
         method: 'POST',
-        url: 'http://localhost:4000/api/v1/activate',
+        url: `${url}api/v1/activate`,
         contentType: 'application/json',
         data: JSON.stringify({ userId }),
         success: function () {
           Swal.fire('Reactivated', 'User is now active', 'success');
           $('#usersTable').DataTable().ajax.reload();
         },
-        error: function (err) {
-          console.error(err);
+        error: function () {
           Swal.fire('Error', 'Failed to reactivate user', 'error');
         }
       });
     }
   });
 }
+
+

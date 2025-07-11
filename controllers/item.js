@@ -2,11 +2,14 @@ const connection = require('../config/database');
 
 exports.getAllItems = (req, res) => {
   const sql = `
-    SELECT i.*, s.quantity, GROUP_CONCAT(img.image_path) AS images
+    SELECT 
+    i.*, 
+    i.stock, 
+    GROUP_CONCAT(img.image_path) AS images
     FROM item i
-    JOIN stock s ON i.item_id = s.item_id
     LEFT JOIN item_images img ON i.item_id = img.item_id
-    GROUP BY i.item_id
+    GROUP BY i.item_id;
+
   `;
 
   connection.query(sql, (err, rows) => {
@@ -23,73 +26,73 @@ exports.getAllItems = (req, res) => {
 
 
 
-exports.getSingleItem = (req, res, ) => {
-    const sql = 'SELECT * FROM item i INNER JOIN stock s ON i.item_id = s.item_id  WHERE i.item_id = ?'
+exports.getSingleItem = (req, res) => {
+    const sql = 'SELECT * FROM item WHERE item_id = ?';
     const values = [parseInt(req.params.id)];
-    try {
-        connection.execute(sql, values, (err, result, fields) => {
-            if (err instanceof Error) {
-                console.log(err);
-                return;
-            }
 
-            return res.status(200).json({
-                success: true,
-                result
-            })
+    connection.execute(sql, values, (err, result) => {
+        if (err) {
+            console.log(err);
+            return res.status(500).json({ error: 'Query error', details: err });
+        }
+        return res.status(200).json({
+            success: true,
+            result
         });
-    } catch (error) {
-        console.log(error)
-    }
-}
+    });
+};
+
+
+
 
 exports.createItem = (req, res) => {
-    const { pname, description, cost_price, sell_price, quantity } = req.body;
-
+    const { pname, description, cost_price, sell_price, stock } = req.body;
     const images = req.files;
 
-    if (!description || !cost_price || !sell_price) {
+    // Validate required fields
+    if (!description || !cost_price || !sell_price || stock === undefined) {
         return res.status(400).json({ error: 'Missing required fields' });
     }
 
-    const insertItemSql = 'INSERT INTO item (pname, description, cost_price, sell_price) VALUES (?, ?, ?, ?)';
-    const itemValues = [pname, description, cost_price, sell_price];
+    // Insert into item table
+    const insertItemSql = `
+        INSERT INTO item (pname, description, cost_price, sell_price, stock)
+        VALUES (?, ?, ?, ?, ?)
+    `;
+    const itemValues = [pname, description, cost_price, sell_price, stock];
 
     connection.execute(insertItemSql, itemValues, (err, result) => {
         if (err) return res.status(500).json({ error: 'Error inserting item', details: err });
 
         const itemId = result.insertId;
 
-        const stockSql = 'INSERT INTO stock (item_id, quantity) VALUES (?, ?)';
-        connection.execute(stockSql, [itemId, quantity], (err) => {
-            if (err) return res.status(500).json({ error: 'Error inserting stock', details: err });
+        // Handle image uploads
+        if (images && images.length > 0) {
+            const insertImageSql = 'INSERT INTO item_images (item_id, image_path) VALUES ?';
+            const imagePaths = images.map(file => [itemId, file.path.replace(/\\/g, '/')]);
 
-            // Insert each image
-            if (images && images.length > 0) {
-                const insertImageSql = 'INSERT INTO item_images (item_id, image_path) VALUES ?';
-                const imagePaths = images.map(file => [itemId, file.path.replace(/\\/g, '/')]);
-                
-                connection.query(insertImageSql, [imagePaths], (err) => {
-                    if (err) return res.status(500).json({ error: 'Error inserting images', details: err });
+            connection.query(insertImageSql, [imagePaths], (err) => {
+                if (err) return res.status(500).json({ error: 'Error inserting images', details: err });
 
-                    return res.status(201).json({
-                        success: true,
-                        message: 'Item and images saved successfully',
-                        itemId,
-                        quantity
-                    });
-                });
-            } else {
                 return res.status(201).json({
                     success: true,
-                    message: 'Item saved without images',
+                    message: 'Item and images saved successfully',
                     itemId,
-                    quantity
+                    stock
                 });
-            }
-        });
+            });
+        } else {
+            // No images provided
+            return res.status(201).json({
+                success: true,
+                message: 'Item saved without images',
+                itemId,
+                stock
+            });
+        }
     });
 };
+
 
 
 const fs = require('fs');
@@ -97,7 +100,7 @@ const path = require('path');
 
 exports.updateItem = (req, res, next) => {
     const id = req.params.id;
-    const { pname, description, cost_price, sell_price, quantity } = req.body;
+    const { pname, description, cost_price, sell_price, stock } = req.body;
 
     let imagePath = [];
 
@@ -105,12 +108,16 @@ exports.updateItem = (req, res, next) => {
         imagePath = req.files.map(file => file.path.replace(/\\/g, "/"));
     }
 
-    if (!pname || !description || !cost_price || !sell_price) {
+    if (!pname || !description || !cost_price || !sell_price || stock === undefined) {
         return res.status(400).json({ error: 'Missing required fields' });
     }
 
-    const itemSql = 'UPDATE item SET pname = ?, description = ?, cost_price = ?, sell_price = ? WHERE item_id = ?';
-    const itemValues = [pname, description, cost_price, sell_price, id];
+    const itemSql = `
+        UPDATE item 
+        SET pname = ?, description = ?, cost_price = ?, sell_price = ?, stock = ?
+        WHERE item_id = ?
+    `;
+    const itemValues = [pname, description, cost_price, sell_price, stock, id];
 
     connection.execute(itemSql, itemValues, (err, result) => {
         if (err) {
@@ -118,47 +125,33 @@ exports.updateItem = (req, res, next) => {
             return res.status(500).json({ error: 'Error updating item', details: err });
         }
 
-        const stockSql = 'UPDATE stock SET quantity = ? WHERE item_id = ?';
-        const stockValues = [quantity, id];
+        // If new images uploaded, replace current images
+        if (imagePath.length > 0) {
+            const deleteSql = 'DELETE FROM item_images WHERE item_id = ?';
+            connection.execute(deleteSql, [id], (err) => {
+                if (err) {
+                    console.log(err);
+                    return res.status(500).json({ error: 'Failed to delete old images' });
+                }
 
-        connection.execute(stockSql, stockValues, (err, result) => {
-            if (err) {
-                console.log(err);
-                return res.status(500).json({ error: 'Error updating stock', details: err });
-            }
+                const insertSql = 'INSERT INTO item_images (item_id, image_path) VALUES ?';
+                const imageValues = imagePath.map(p => [id, p]);
 
-            // If new images uploaded, replace current images
-            if (imagePath.length > 0) {
-                const deleteSql = 'DELETE FROM item_images WHERE item_id = ?';
-                connection.execute(deleteSql, [id], (err, result) => {
+                connection.query(insertSql, [imageValues], (err) => {
                     if (err) {
                         console.log(err);
-                        return res.status(500).json({ error: 'Failed to delete old images' });
+                        return res.status(500).json({ error: 'Failed to insert new images' });
                     }
 
-                    const insertSql = 'INSERT INTO item_images (item_id, image_path) VALUES ?';
-                    const imageValues = imagePath.map(path => [id, path]);
-
-                    connection.query(insertSql, [imageValues], (err, result) => {
-                        if (err) {
-                            console.log(err);
-                            return res.status(500).json({ error: 'Failed to insert new images' });
-                        }
-
-                        return res.status(200).json({ success: true, message: 'Item updated with new images' });
-                    });
+                    return res.status(200).json({ success: true, message: 'Item updated with new images' });
                 });
-            } else {
-                // No new image uploaded
-                return res.status(200).json({ success: true, message: 'Item updated successfully (no new images)' });
-            }
-        });
+            });
+        } else {
+            // No new image uploaded
+            return res.status(200).json({ success: true, message: 'Item updated successfully (no new images)' });
+        }
     });
 };
-
-
-
-
 
 
 exports.deleteItem = (req, res) => {

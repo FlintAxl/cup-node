@@ -102,6 +102,10 @@
               </div>
             `).join('');
 
+            const button = item.stock > 0
+              ? `<button onclick="event.stopPropagation(); addToCart(${item.item_id}, '${item.pname}', ${item.sell_price})">Add to Cart</button>`
+              : `<button class="btn btn-secondary" disabled>Out of Stock</button>`;
+
             $('#item-container').append(`
               <div class="item-card" onclick="$('#${carouselId}').carousel('next')">
                 <div id="${carouselId}" class="carousel slide" data-bs-ride="carousel">
@@ -112,11 +116,12 @@
                 <p><strong>${item.pname || 'No Name'}</strong></p>
                 <p>${item.description}</p>
                 <p><strong>₱${item.sell_price}</strong></p>
-                <button onclick="event.stopPropagation(); addToCart(${item.item_id}, '${item.pname}', ${item.sell_price})">Add to Cart</button>
-                <button onclick="event.stopPropagation(); orderItem(${item.item_id})">Order Now</button>
+                <p>Stock: ${item.stock}</p>
+                ${button}
               </div>
             `);
           });
+
         } else {
           $('#item-container').html('<p>No items available.</p>');
         }
@@ -131,7 +136,7 @@
   
   </script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  <script src="js/order.js"></script>
+  
   <script src="js/cart.js"></script>
 
 </body>

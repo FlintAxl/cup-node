@@ -52,7 +52,7 @@ $(document).ready(function () {
             { data: 'description' },
             { data: 'cost_price' },
             { data: 'sell_price' },
-            { data: 'quantity' },
+            { data: 'stock' },
             {
                 data: null,
                 render: function (data) {
@@ -126,7 +126,7 @@ $(document).ready(function () {
                 $('#desc').val(result[0].description);
                 $('#sell').val(result[0].sell_price);
                 $('#cost').val(result[0].cost_price);
-                $('#qty').val(result[0].quantity);
+                $('#stock').val(result[0].stock);
                 if (result[0].images) {
                 const images = result[0].images.split(',');
                 images.forEach((img, index) => {

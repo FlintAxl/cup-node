@@ -31,33 +31,45 @@ const registerUser = async (req, res) => {
 const loginUser = (req, res) => {
   const { email, password } = req.body;
   const sql = 'SELECT id, name, email, password FROM users WHERE email = ? AND deleted_at IS NULL';
+  
   connection.execute(sql, [email], async (err, results) => {
     if (err) {
       console.log(err);
       return res.status(500).json({ error: 'Error logging in', details: err });
     }
+    
     if (results.length === 0) {
       return res.status(401).json({ success: false, message: 'Invalid email or password' });
     }
 
     const user = results[0];
-
     const match = await bcrypt.compare(password, user.password);
+    
     if (!match) {
       return res.status(401).json({ success: false, message: 'Invalid email or password' });
     }
 
-    
-    delete user.password;
-    const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET,);
+    // Generate token
+    const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET);
 
-    return res.status(200).json({
-      success: "welcome back",
-      user: results[0],
-      token
+    // Save token in database
+    const updateTokenSql = 'UPDATE users SET token = ? WHERE id = ?';
+    connection.execute(updateTokenSql, [token, user.id], (updateErr, updateResult) => {
+      if (updateErr) {
+        console.log(updateErr);
+        return res.status(500).json({ error: 'Error saving token', details: updateErr });
+      }
+
+      delete user.password;
+      return res.status(200).json({
+        success: "welcome back",
+        user,
+        token
+      });
     });
   });
 };
+
 
 const updateUser = (req, res) => {
   const { name, address, phone, userId } = req.body;

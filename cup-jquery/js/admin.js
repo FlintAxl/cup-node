@@ -224,7 +224,3 @@ function deleteReview(id) {
     }
   });
 }
-
-
-
-

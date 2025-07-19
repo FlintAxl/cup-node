@@ -38,7 +38,7 @@ exports.loginUser = (req, res) => {
   if (!password || password.trim() === '') {
     return res.status(400).json({ error: 'Password is required' });
   }
-  
+
   // First, get the user regardless of is_active to check status
   const sql = `
   SELECT id, name, email, password, is_active, role
@@ -84,7 +84,9 @@ exports.loginUser = (req, res) => {
 
 
     // ✅ Generate token if active & password matches
-    const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET);
+    // const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET);
+
+    const token = jwt.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET);
 
     const updateTokenSql = 'UPDATE users SET token = ? WHERE id = ?';
     connection.execute(updateTokenSql, [token, user.id], (updateErr) => {

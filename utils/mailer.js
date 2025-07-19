@@ -11,39 +11,97 @@ const transporter = nodemailer.createTransport({
   }
 });
 
-// ✅ Generate PDF in memory
 function generateReceiptPDF(order) {
   return new Promise((resolve, reject) => {
-    const doc = new PDFDocument();
+    const doc = new PDFDocument({ margin: 50 });
     const buffers = [];
 
     doc.on('data', buffers.push.bind(buffers));
     doc.on('end', () => {
-      const pdfData = Buffer.concat(buffers); 
+      const pdfData = Buffer.concat(buffers);
       resolve(pdfData);
     });
     doc.on('error', reject);
 
-    // --- PDF content ---
-    doc.fontSize(20).text('Receipt', { align: 'center' });
-    doc.moveDown();
-    doc.fontSize(14).text(`Order ID: ${order.order_id}`);
-    doc.text(`Customer: ${order.customer_name}`);
-    doc.text(`Date: ${order.date_placed}`);
-    doc.text(`Status: ${order.status}`);
-    doc.moveDown();
-    doc.text('Items:', { underline: true });
+    // ========== HEADER ==========
+    doc
+      .font('Helvetica-Bold')
+      .fontSize(24)
+      .fillColor('#333333')
+      .text('CUP OF JOY', { align: 'center' });
 
+    doc
+      .moveDown(0.5)
+      .fontSize(16)
+      .fillColor('#555555')
+      .text('Official Receipt', { align: 'center' });
+
+    doc.moveDown();
+    drawLine(doc, '#cccccc');
+
+    // ========== ORDER DETAILS ==========
+    doc.moveDown();
+    doc.font('Helvetica-Bold').fontSize(12).fillColor('#000000');
+    doc.text(`Order ID: `, { continued: true }).font('Helvetica').text(order.order_id);
+    doc.font('Helvetica-Bold').text(`Customer: `, { continued: true }).font('Helvetica').text(order.customer_name);
+    doc.font('Helvetica-Bold').text(`Date: `, { continued: true }).font('Helvetica').text(order.date_placed);
+    doc.font('Helvetica-Bold').text(`Status: `, { continued: true }).font('Helvetica').text(order.status);
+
+    doc.moveDown();
+    drawLine(doc, '#cccccc');
+
+    // ========== TABLE HEADER ==========
+    doc.moveDown(0.8);
+    doc.fontSize(12).font('Helvetica-Bold').fillColor('#222222');
+    doc.text('Item', 50, doc.y, { width: 250 });
+    doc.text('Qty', 300, doc.y, { width: 50, align: 'center' });
+    doc.text('Price', 370, doc.y, { width: 80, align: 'right' });
+    doc.text('Total', 470, doc.y, { width: 80, align: 'right' });
+
+    drawLine(doc, '#999999');
+
+    // ========== ITEMS ==========
+    doc.font('Helvetica').fontSize(11).fillColor('#000000');
     order.items.forEach(item => {
-      doc.text(`• ${item.pname} x${item.quantity} = ₱${item.total_price}`);
+      const total = (item.quantity * (item.price || (item.total_price / item.quantity))).toFixed(2);
+      const price = (item.price || (item.total_price / item.quantity)).toFixed(2);
+
+      doc.text(item.pname, 50, doc.y + 5, { width: 250 });
+      doc.text(item.quantity.toString(), 300, doc.y, { width: 50, align: 'center' });
+      doc.text(`₱${price}`, 370, doc.y, { width: 80, align: 'right' });
+      doc.text(`₱${total}`, 470, doc.y, { width: 80, align: 'right' });
+
+      doc.moveDown();
+      drawLine(doc, '#eeeeee');
     });
 
-    doc.moveDown();
-    doc.fontSize(16).text(`Total: ₱${order.total_amount}`, { align: 'right' });
+    // ========== GRAND TOTAL ==========
+    doc.moveDown(1);
+    doc.font('Helvetica-Bold').fontSize(14).fillColor('#000000');
+    doc.text(`Grand Total: ₱${order.total_amount.toFixed ? order.total_amount.toFixed(2) : order.total_amount}`, {
+      align: 'right'
+    });
+
+    doc.moveDown(2);
+    doc.font('Helvetica-Oblique').fontSize(10).fillColor('#555555').text(
+      'Thank you for your purchase! Please keep this receipt for your records.',
+      { align: 'center' }
+    );
 
     doc.end();
   });
 }
+
+// helper line drawer with custom color
+function drawLine(doc, color) {
+  doc
+    .strokeColor(color || '#aaaaaa')
+    .lineWidth(1)
+    .moveTo(50, doc.y)
+    .lineTo(550, doc.y)
+    .stroke();
+}
+
 
 /// Enhanced email templates with vintage white and brown styling
 async function sendReceiptEmail(toEmail, order, pdfBuffer) {

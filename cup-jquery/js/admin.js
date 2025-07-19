@@ -11,7 +11,10 @@ function initUsersTable() {
   $('#usersTable').DataTable({
     ajax: {
       url: `${url}api/v1/users`,
-      dataSrc: 'data'
+      dataSrc: 'data',
+      headers: {
+      Authorization: 'Bearer ' + sessionStorage.getItem('access_token') // 👈 ADD THIS
+    },
     },
     columns: [
       { data: 'id' },
@@ -49,6 +52,9 @@ function updateRole(userId, role) {
   $.ajax({
     method: 'POST',
     url: `${url}api/v1/update-role`,
+    headers: {
+      Authorization: 'Bearer ' + sessionStorage.getItem('access_token') // 👈 ADD THIS
+    },
     contentType: 'application/json',
     data: JSON.stringify({ userId, role }),
     success: function () {
@@ -72,6 +78,9 @@ function deactivateUser(userId) {
       $.ajax({
         method: 'POST',
         url: `${url}api/v1/soft-delete`,
+        headers: {
+      Authorization: 'Bearer ' + sessionStorage.getItem('access_token') // 👈 ADD THIS
+    },
         contentType: 'application/json',
         data: JSON.stringify({ userId }),
         success: function () {
@@ -97,6 +106,9 @@ function activateUser(userId) {
       $.ajax({
         method: 'POST',
         url: `${url}api/v1/activate`,
+        headers: {
+      Authorization: 'Bearer ' + sessionStorage.getItem('access_token') // 👈 ADD THIS
+    },
         contentType: 'application/json',
         data: JSON.stringify({ userId }),
         success: function () {

@@ -190,7 +190,10 @@ function initReviewsTable() {
   $('#reviewsTable').DataTable({
     ajax: {
       url: `${url}api/v1/reviews/all`,
-      dataSrc: 'data'
+      dataSrc: 'data',
+      headers: {
+      Authorization: 'Bearer ' + sessionStorage.getItem('access_token') // 👈 ADD THIS
+    },
     },
     columns: [
       { data: 'review_id' },
@@ -224,6 +227,9 @@ function deleteReview(id) {
     if (result.isConfirmed) {
       $.ajax({
         url: `${url}api/v1/reviews/${id}`,
+        headers: {
+      Authorization: 'Bearer ' + sessionStorage.getItem('access_token') // 👈 ADD THIS
+    },
         method: 'DELETE',
         success: function () {
           Swal.fire('Deleted!', 'Review has been deleted.', 'success');

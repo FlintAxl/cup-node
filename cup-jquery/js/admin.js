@@ -113,22 +113,21 @@ function activateUser(userId) {
 
 function initOrdersTable() {
   $('#ordersTable').DataTable({
-    ajax: {
-      url: `${url}api/v1/orders/all`,
-      dataSrc: 'data'
-    },
+  ajax: {
+    url: `${url}api/v1/orders/all`,
+    dataSrc: 'data',
+    headers: {
+  Authorization: 'Bearer ' + sessionStorage.getItem('access_token')
+}
+
+  },
+
     columns: [
       { data: 'order_id' },
       { data: 'customer_name' },
       { data: 'items' },
-      {
-        data: 'total_amount',
-        render: amount => `₱${parseFloat(amount).toFixed(2)}`
-      },
-      {
-        data: 'date_placed',
-        render: date => new Date(date).toLocaleString()
-      },
+      { data: 'total_amount', render: amount => `₱${parseFloat(amount).toFixed(2)}` },
+      { data: 'date_placed', render: date => new Date(date).toLocaleString() },
       { data: 'status' },
       {
         data: null,
@@ -137,17 +136,12 @@ function initOrdersTable() {
           const isShipped = data.status === 'shipped';
 
           let buttons = '';
-
-          // Cancel button
           if (!isFinal && !isShipped) {
             buttons += `<button class="btn btn-sm btn-danger me-1" onclick="updateOrderStatus(${data.order_id}, 'cancelled')">Cancel</button>`;
           }
-
-          // Ship button
           if (data.status === 'pending') {
             buttons += `<button class="btn btn-sm btn-primary" onclick="updateOrderStatus(${data.order_id}, 'shipped')">Mark as Shipped</button>`;
           }
-
           return buttons || '-';
         }
       }
@@ -155,17 +149,23 @@ function initOrdersTable() {
   });
 }
 
+
 function updateOrderStatus(orderId, newStatus) {
   $.ajax({
     url: `${url}api/v1/orders/update-status`,
+    
     method: 'PATCH',
     contentType: 'application/json',
+    headers: {
+      Authorization: 'Bearer ' + sessionStorage.getItem('access_token') // 👈 ADD THIS
+    },
     data: JSON.stringify({ order_id: orderId, status: newStatus }),
     success: () => {
       Swal.fire('Updated', 'Order status updated', 'success');
       $('#ordersTable').DataTable().ajax.reload();
     },
     error: () => {
+      
       Swal.fire('Error', 'Failed to update order status', 'error');
       $('#ordersTable').DataTable().ajax.reload();
     }

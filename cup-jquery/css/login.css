@@ -1,0 +1,236 @@
+/* Vintage Login Page Styles */
+
+/* Import vintage-style fonts */
+@import url('https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;1,400&family=Playfair+Display:wght@400;700&display=swap');
+
+/* Root variables for consistent vintage color palette */
+:root {
+  --vintage-cream: #faf7f2;
+  --vintage-white: #fffef9;
+  --vintage-light-brown: #d4b896;
+  --vintage-medium-brown: #a67c52;
+  --vintage-dark-brown: #704214;
+  --vintage-deep-brown: #4a2c0a;
+  --vintage-shadow: rgba(116, 66, 20, 0.15);
+  --vintage-border: rgba(166, 124, 82, 0.3);
+}
+
+/* Body styling with vintage texture */
+body {
+  background: linear-gradient(135deg, var(--vintage-cream) 0%, var(--vintage-white) 100%);
+  background-attachment: fixed;
+  font-family: 'Crimson Text', serif;
+  color: var(--vintage-deep-brown);
+  min-height: 100vh;
+  margin: 0;
+  padding: 40px 20px;
+  position: relative;
+}
+
+/* Add subtle paper texture overlay */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: 
+    radial-gradient(circle at 1px 1px, rgba(166, 124, 82, 0.08) 1px, transparent 0);
+  background-size: 20px 20px;
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* Login form container */
+#loginForm {
+  background: var(--vintage-white);
+  border: 2px solid var(--vintage-light-brown);
+  border-radius: 8px;
+  box-shadow: 
+    0 8px 32px var(--vintage-shadow),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  padding: 40px 35px;
+  margin-top: 60px;
+  position: relative;
+}
+
+/* Decorative corner elements */
+#loginForm::before,
+#loginForm::after {
+  content: '';
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--vintage-medium-brown);
+}
+
+#loginForm::before {
+  top: 15px;
+  left: 15px;
+  border-right: none;
+  border-bottom: none;
+}
+
+#loginForm::after {
+  bottom: 15px;
+  right: 15px;
+  border-left: none;
+  border-top: none;
+}
+
+/* Header styling */
+#loginForm h2 {
+  font-family: 'Playfair Display', serif;
+  font-size: 2.2em;
+  font-weight: 700;
+  color: var(--vintage-dark-brown);
+  text-align: center;
+  margin-bottom: 30px;
+  position: relative;
+  text-shadow: 1px 1px 2px rgba(212, 184, 150, 0.3);
+}
+
+/* Decorative line under header */
+#loginForm h2::after {
+  content: '';
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 2px;
+  background: linear-gradient(to right, transparent, var(--vintage-medium-brown), transparent);
+}
+
+/* Label styling */
+label {
+  font-family: 'Crimson Text', serif;
+  font-size: 1.1em;
+  font-weight: 600;
+  color: var(--vintage-dark-brown);
+  margin-bottom: 8px;
+  display: block;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Input field styling */
+input[type="email"],
+input[type="password"] {
+  width: 100%;
+  padding: 12px 15px;
+  font-family: 'Crimson Text', serif;
+  font-size: 1em;
+  color: var(--vintage-deep-brown);
+  background: var(--vintage-cream);
+  border: 2px solid var(--vintage-border);
+  border-radius: 4px;
+  box-sizing: border-box;
+  transition: all 0.3s ease;
+}
+
+input[type="email"]:focus,
+input[type="password"]:focus {
+  outline: none;
+  border-color: var(--vintage-medium-brown);
+  background: var(--vintage-white);
+  box-shadow: 
+    0 0 0 3px rgba(166, 124, 82, 0.1),
+    inset 0 2px 4px rgba(116, 66, 20, 0.05);
+}
+
+/* Form group spacing */
+div[style*="margin-bottom"] {
+  margin-bottom: 20px !important;
+}
+
+/* Button styling */
+button[type="submit"] {
+  width: 100% !important;
+  padding: 14px !important;
+  font-family: 'Playfair Display', serif !important;
+  font-size: 1.1em !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 1px !important;
+  color: var(--vintage-white) !important;
+  background: linear-gradient(135deg, var(--vintage-medium-brown) 0%, var(--vintage-dark-brown) 100%) !important;
+  border: 2px solid var(--vintage-dark-brown) !important;
+  border-radius: 6px !important;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(116, 66, 20, 0.2);
+  margin-top: 15px;
+}
+
+button[type="submit"]:hover {
+  background: linear-gradient(135deg, var(--vintage-dark-brown) 0%, var(--vintage-deep-brown) 100%) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(116, 66, 20, 0.3);
+}
+
+button[type="submit"]:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(116, 66, 20, 0.3);
+}
+
+/* Custom SweetAlert2 styling for vintage theme */
+.swal2-popup {
+  background: var(--vintage-white) !important;
+  border: 2px solid var(--vintage-light-brown) !important;
+  border-radius: 8px !important;
+  font-family: 'Crimson Text', serif !important;
+}
+
+.swal2-title {
+  font-family: 'Playfair Display', serif !important;
+  color: var(--vintage-dark-brown) !important;
+}
+
+.swal2-content {
+  color: var(--vintage-deep-brown) !important;
+}
+
+.swal2-confirm {
+  background: var(--vintage-medium-brown) !important;
+  border: 2px solid var(--vintage-dark-brown) !important;
+  font-family: 'Playfair Display', serif !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px !important;
+}
+
+.swal2-confirm:hover {
+  background: var(--vintage-dark-brown) !important;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  body {
+    padding: 20px 15px;
+  }
+  
+  #loginForm {
+    margin-top: 30px;
+    padding: 30px 25px;
+  }
+  
+  #loginForm h2 {
+    font-size: 1.8em;
+  }
+}
+
+@media (max-width: 480px) {
+  #loginForm {
+    padding: 25px 20px;
+  }
+  
+  #loginForm h2 {
+    font-size: 1.6em;
+  }
+  
+  label {
+    font-size: 1em;
+  }
+}

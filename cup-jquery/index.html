@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Shop - Cup</title>
+
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- jQuery -->
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+ <link rel="stylesheet" href="css/index.css">
+  <!-- jQuery UI CSS -->
+<link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
+<!-- jQuery UI JS -->
+<script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+
+
+</head>
+<body>
+
+  <!-- Load header -->
+  <div id="header"></div> 
+<img src="css/cup.png" alt="Banner" class="banner-img">
+  <h1>Our Items</h1>
+
+  <!-- 🔎 Search bar -->
+<div class="text-center mt-3">
+  <input type="text" id="search-bar" class="form-control d-inline-block" style="max-width:400px;" placeholder="Search items...">
+</div>
+
+  <!-- Category Buttons --> 
+  <div class="text-center mt-3">
+    <button class="btn btn-outline-primary m-2" onclick="filterItems('Ceramic')">Ceramic</button>
+    <button class="btn btn-outline-primary m-2" onclick="filterItems('Plastic')">Plastic</button>
+    <button class="btn btn-outline-primary m-2" onclick="filterItems('Glass')">Glass</button>
+    <button class="btn btn-outline-secondary m-2" onclick="filterItems('All')">All</button>
+  </div>
+
+  <div id="item-container"></div>
+
+  <!-- Item Details Modal -->
+  <div class="modal fade" id="itemModal" tabindex="-1"
+     aria-labelledby="itemModalLabel" aria-hidden="true"
+     data-bs-backdrop="static" data-bs-keyboard="false">
+
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="modalItemName"></h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div id="modalCarousel" class="carousel slide mb-3" data-bs-ride="carousel">
+            <div class="carousel-inner" id="modalCarouselInner"></div>
+            <button class="carousel-control-prev" type="button" data-bs-target="#modalCarousel" data-bs-slide="prev">
+              <span class="carousel-control-prev-icon"></span>
+            </button>
+            <button class="carousel-control-next" type="button" data-bs-target="#modalCarousel" data-bs-slide="next">
+              <span class="carousel-control-next-icon"></span>
+            </button>
+          </div>
+
+          <p id="modalItemDescription"></p>
+          <p><strong>Price:</strong> ₱<span id="modalItemPrice"></span></p>
+            <p><strong>Category:</strong> <span id="modalItemCategory"></span></p>
+
+            <hr>
+            <div id="modalAddToCart" class="mt-3"></div>
+          <h6>Reviews</h6>
+          <div id="modalReviews">Loading reviews...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="js/config.js"></script>
+  <script src="js/cart.js"></script>
+
+  <script>
+    // Load header
+    $('#header').load('header.html');
+
+    let allItems = []; // global array to store all items
+
+    $(document).ready(function () {
+      $.get('/api/v1/items', function (response) {
+        allItems = response.data || [];
+        renderItems(allItems);
+      }).fail(function () {
+        $('#item-container').html('<p style="color:red;">Failed to load items. Please check your server or API path.</p>');
+      });
+    });
+
+    // Render items function
+    function renderItems(items) {
+      $('#item-container').empty();
+
+      if (!items || items.length === 0) {
+        $('#item-container').html('<p>No items available.</p>');
+        return;
+      }
+
+      items.forEach((item, index) => {
+        const images = item.images.length > 0 ? item.images : ['images/default.jpg'];
+        const carouselId = `carousel-${index}`;
+
+        const carouselItems = images.map((img, i) => `
+          <div class="carousel-item ${i === 0 ? 'active' : ''}">
+            <img src="/${img}" alt="Item Image ${i + 1}">
+          </div>
+        `).join('');
+
+        const button = item.stock > 0
+          ? `<button onclick="event.stopPropagation(); addToCart(${item.item_id}, '${item.pname}', ${item.sell_price})">Add to Cart</button>`
+          : `<button class="btn btn-secondary" disabled>Out of Stock</button>`;
+
+        $('#item-container').append(`
+          <div class="item-card" onclick="showItemDetails(${item.item_id})">
+            <div id="${carouselId}" class="carousel slide" data-bs-ride="carousel">
+              <div class="carousel-inner">${carouselItems}</div>
+            </div>
+            <p><strong>${item.pname || 'No Name'}</strong></p>
+            <p>${item.description}</p>
+            <p><strong>₱${item.sell_price}</strong></p>
+            
+            <p>Stock: ${item.stock}</p>
+            ${button}
+          </div>
+        `);
+      });
+    }
+
+    // Filter items by category
+   function filterItems(category) {
+  const searchTerm = $('#search-bar').val().toLowerCase();
+
+  let filtered = allItems;
+
+  if (category !== 'All') {
+    filtered = filtered.filter(item =>
+      item.category_name && item.category_name.toLowerCase() === category.toLowerCase()
+    );
+  }
+
+  if (searchTerm) {
+    filtered = filtered.filter(item =>
+      (item.pname && item.pname.toLowerCase().includes(searchTerm)) ||
+      (item.description && item.description.toLowerCase().includes(searchTerm))
+    );
+  }
+
+  renderItems(filtered);
+}
+
+
+    // Show item details (already in your original script)
+    function showItemDetails(itemId) {
+      $.get(`/api/v1/items/${itemId}/details`, function(res) {
+        if (!res.success) return;
+
+        const item = res.data;
+
+        // Build carousel
+        let carouselHtml = '';
+        if (item.images && item.images.length > 0) {
+          carouselHtml = item.images.map((img, i) => `
+            <div class="carousel-item ${i === 0 ? 'active' : ''}">
+              <img src="/${img}" class="d-block w-100" style="max-height:1000px;object-fit:cover;">
+            </div>
+          `).join('');
+        } else {
+          carouselHtml = `
+            <div class="carousel-item active">
+              <img src="/images/default.jpg" class="d-block w-100" style="max-height:1000px;object-fit:cover;">
+            </div>
+          `;
+        }
+
+        $('#modalCarouselInner').html(carouselHtml);
+        $('#modalItemName').text(item.pname);
+        
+        $('#modalItemDescription').text(item.description || 'No description');
+        $('#modalItemPrice').text(item.sell_price);
+        $('#modalItemCategory').text(item.category_name || 'No category');
+
+        // Reviews
+        let reviewsHtml = '';
+        if (item.reviews && item.reviews.length > 0) {
+          reviewsHtml = item.reviews.map(r => `
+            <div class="border-bottom mb-2 pb-2">
+              <strong>${r.reviewer_name || 'Anonymous'}</strong> – ⭐${r.rating}
+              <p>${r.comment}</p>
+            </div>
+          `).join('');
+        } else {
+          reviewsHtml = `<p class="text-muted">No reviews yet.</p>`;
+        }
+        $('#modalReviews').html(reviewsHtml);
+
+        // Add to cart button
+        let buttonHtml = '';
+        if (item.stock > 0) {
+          buttonHtml = `
+            <button class="btn btn-primary w-100"
+              onclick="addToCart(${item.item_id}, '${item.pname.replace(/'/g, "\\'")}', ${item.sell_price})">
+              <i class="bi bi-cart-plus"></i> Add to Cart
+            </button>
+          `;
+        } else {
+          buttonHtml = `<button class="btn btn-secondary w-100" disabled>Out of Stock</button>`;
+        }
+        $('#modalAddToCart').html(buttonHtml);
+
+        const modal = new bootstrap.Modal(document.getElementById('itemModal'));
+modal.show();
+      });
+    }
+
+
+
+  </script>
+
+
+
+
+ <script>
+$(function () {
+  $('#search-bar').autocomplete({
+    minLength: 1,
+    source: function (request, response) {
+      $.ajax({
+        url: '/api/v1/items/search',
+        data: { q: request.term },
+        success: function (res) {
+          if (res.success) {
+            response(res.data.map(item => ({
+              label: `${item.pname} - ₱${item.sell_price}`,
+              value: item.pname,
+              fullData: item
+            })));
+
+            // Save to global items array
+            allItems = res.data;
+          } else {
+            response([]);
+          }
+        },
+        error: function () {
+          response([]);
+        }
+      });
+    },
+    select: function (event, ui) {
+      $('#search-bar').val(ui.item.value);
+      filterItems('All'); 
+      return false;
+    }
+  });
+
+  // 🔽 Place this right after autocomplete
+  $('#search-bar').on('keyup', function () {
+    filterItems('All'); // Trigger filter while typing
+  });
+});
+
+</script>
+
+
+</body>
+</html>

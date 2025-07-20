@@ -1,0 +1,85 @@
+<header>
+  <link rel="stylesheet" href="css/header.css">
+</header>
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary px-3">
+
+  <a class="navbar-brand" href="#">CUP OF JOY</a>
+  <button
+    class="navbar-toggler"
+    type="button"
+    data-bs-toggle="collapse"
+    data-bs-target="#navbarNav"
+    aria-controls="navbarNav"
+    aria-expanded="false"
+    aria-label="Toggle navigation"
+  >
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+  <div class="collapse navbar-collapse" id="navbarNav">
+    <ul class="navbar-nav ms-auto">
+      <li class="nav-item">
+        <a class="nav-link" href="index.html">Home</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="profile.html">Profile</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="cart.html">Cart</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="orders.html">MyOrders</a>
+      </li>
+      <li class="nav-item" id="register">
+        <a class="nav-link" href="register.html">Register</a>
+      </li>
+      <li class="nav-item" id="log">
+        <a class="nav-link" href="login.html">Login</a>
+      </li>
+      <li class="nav-item" id="logout" style="display:none;">
+  <a class="nav-link" href="#">Logout</a>
+</li>
+      <li class="nav-item" id="admin">
+        <a class="nav-link" href="admin.html">Admin Dashboard</a>
+      </li>
+
+    </ul>
+  </div>
+</nav>
+
+
+<script>
+  $(document).ready(function () {
+    const userId = sessionStorage.getItem('userId');
+    const role = sessionStorage.getItem('role');
+
+    if (userId) {
+      // Hide Login and Register buttons
+      $('#log').hide();
+      $('#register').hide();
+
+      // Show Admin Dashboard if the role is admin
+      if (role === 'admin') {
+        $('#admin').show();
+      } else {
+        $('#admin').hide();
+      }
+    } else {
+      // If not logged in, hide Admin
+      $('#admin').hide();
+    }
+  });
+</script>
+<script>
+  $(document).ready(function () {
+    const userId = sessionStorage.getItem('userId');
+    if (userId) {
+      $('#logout').show();
+    }
+
+    $('#logout').on('click', function () {
+      sessionStorage.clear();
+      window.location.href = 'index.html';
+    });
+  });
+</script>

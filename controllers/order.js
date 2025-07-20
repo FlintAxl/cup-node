@@ -328,6 +328,48 @@ exports.updateOrderStatus = (req, res) => {
     return res.status(400).json({ error: 'Invalid status' });
   }
 
+  // ✅ First: if cancelling, fetch items to rollback stock
+  if (status === 'cancelled') {
+    const getItemsSql = `
+      SELECT item_id, quantity 
+      FROM orderline 
+      WHERE orderinfo_id = ?
+    `;
+    connection.query(getItemsSql, [order_id], (err, itemRows) => {
+      if (err) return res.status(500).json({ error: 'Failed to fetch order items', details: err });
+
+      if (itemRows.length === 0) {
+        return res.status(404).json({ error: 'No items found for this order' });
+      }
+
+      // Rollback stock
+      const rollbackPromises = itemRows.map(item => {
+        return new Promise((resolve, reject) => {
+          const rollbackSql = `UPDATE item SET stock = stock + ? WHERE item_id = ?`;
+          connection.query(rollbackSql, [item.quantity, item.item_id], (err2) => {
+            if (err2) reject(err2);
+            else resolve();
+          });
+        });
+      });
+
+      Promise.all(rollbackPromises)
+        .then(() => {
+          // After rollback, update order status
+          finalizeStatusUpdate(order_id, status, res);
+        })
+        .catch(err3 => {
+          return res.status(500).json({ error: 'Stock rollback failed', details: err3 });
+        });
+    });
+  } else {
+    // For non-cancelled statuses, just update status
+    finalizeStatusUpdate(order_id, status, res);
+  }
+};
+
+// ✅ Helper function to finalize status update and send emails
+function finalizeStatusUpdate(order_id, status, res) {
   connection.execute(
     `UPDATE orderinfo SET status = ? WHERE order_id = ?`,
     [status, order_id],
@@ -350,7 +392,6 @@ exports.updateOrderStatus = (req, res) => {
 
         const order = rows[0];
 
-        // ✅ If marked as received → attach PDF
         if (status === 'received') {
           const itemsSql = `
             SELECT i.pname, ol.quantity, (ol.quantity * i.sell_price) as total_price
@@ -365,8 +406,6 @@ exports.updateOrderStatus = (req, res) => {
             }
 
             order.items = itemRows;
-
-            // Calculate total_amount (if not already in order)
             order.total_amount = itemRows.reduce((sum, i) => sum + i.total_price, 0);
 
             try {
@@ -380,7 +419,7 @@ exports.updateOrderStatus = (req, res) => {
             return res.status(200).json({ success: true, message: 'Status updated and receipt sent' });
           });
         } else {
-          // ✅ For other statuses: send a plain email
+          // For cancelled, shipped, pending → just send status email
           sendOrderStatusEmail(order.email, order.order_id, status)
             .then(() => {
               console.log('📧 Status update email sent');
@@ -394,4 +433,4 @@ exports.updateOrderStatus = (req, res) => {
       });
     }
   );
-};
+}

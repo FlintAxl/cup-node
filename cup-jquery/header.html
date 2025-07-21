@@ -77,9 +77,48 @@
       $('#logout').show();
     }
 
-    $('#logout').on('click', function () {
+    $('#logout').on('click', function (e) {
+  e.preventDefault();
+
+  const userId = sessionStorage.getItem('userId');
+  if (!userId) {
+    console.warn("⚠️ No userId in sessionStorage");
+    sessionStorage.clear();
+    window.location.href = 'index.html';
+    return;
+  }
+
+  console.log("🔹 [FRONTEND] Sending logout request for userId:", userId);
+
+  $.ajax({
+    method: "POST",
+    url: `${url}api/v1/logout`,
+    data: JSON.stringify({ id: JSON.parse(userId) }), // parse because you stored it as JSON
+    processData: false,
+    contentType: 'application/json; charset=utf-8',
+    dataType: "json",
+    success: function (res) {
+      console.log("✅ [FRONTEND] Logout success response:", res);
+      sessionStorage.clear();
+      Swal.fire({
+        icon: "success",
+        text: "Logged out successfully",
+        timer: 1000,
+        showConfirmButton: false,
+        timerProgressBar: true
+      }).then(() => {
+        window.location.href = 'index.html';
+      });
+    },
+    error: function (xhr, status, err) {
+      console.error("❌ [FRONTEND] Logout error:", err);
+      console.error("❌ [FRONTEND] Response text:", xhr.responseText);
+      // even if there's an error, clear local session
       sessionStorage.clear();
       window.location.href = 'index.html';
-    });
+    }
+  });
+});
+
   });
 </script>

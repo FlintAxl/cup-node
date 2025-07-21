@@ -105,6 +105,33 @@ exports.loginUser = (req, res) => {
   });
 };
 
+exports.logoutUser = (req, res) => {
+  const { id } = req.body;
+
+  if (!id) {
+    return res.status(400).json({ error: "User ID is required for logout" });
+  }
+
+  console.log("🔹 [BACKEND] Logout request for user ID:", id);
+
+  const sql = 'UPDATE users SET token = NULL WHERE id = ?';
+  connection.execute(sql, [id], (err, result) => {
+    if (err) {
+      console.error("❌ [BACKEND] Logout error:", err);
+      return res.status(500).json({ error: "Error logging out", details: err });
+    }
+
+    if (result.affectedRows === 0) {
+      console.warn("⚠️ [BACKEND] No user found with ID:", id);
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    console.log("✅ [BACKEND] Token cleared for user ID:", id);
+    return res.status(200).json({ success: true, message: "Logout successful" });
+  });
+};
+
+
 
 
 exports.updateUser = (req, res) => {

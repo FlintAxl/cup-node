@@ -46,8 +46,6 @@ exports.loginUser = (req, res) => {
   WHERE email = ? AND deleted_at IS NULL
 `;
 
-
-
   connection.execute(sql, [email], async (err, results) => {
     if (err) {
       console.log(err);
@@ -84,8 +82,6 @@ exports.loginUser = (req, res) => {
 
 
     // ✅ Generate token if active & password matches
-    // const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET);
-
     const token = jwt.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET);
 
     const updateTokenSql = 'UPDATE users SET token = ? WHERE id = ?';

@@ -332,6 +332,7 @@ $('#modalItemCategory').text(item.category_name || 'No category');
 }
 
 
+//load ng  items sa index.html
 function renderItems(items) {
   $('#item-container').empty(); // clear current items
 

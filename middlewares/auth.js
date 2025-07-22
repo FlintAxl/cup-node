@@ -1,5 +1,8 @@
 const jwt = require("jsonwebtoken");
 
+// Middleware to check if user is authenticated
+// This will check for a valid JWT token in the Authorization header
+// If the token is valid, it will decode it and attach user info to req.user
 exports.isAuthenticatedUser = (req, res, next) => {
   const authHeader = req.header('Authorization');
 
@@ -18,6 +21,7 @@ exports.isAuthenticatedUser = (req, res, next) => {
   }
 };
 
+// Middleware to check if user has the required role
 exports.authorizeRoles = (...roles) => {
   return (req, res, next) => {
     if (!roles.includes(req.user.role)) {

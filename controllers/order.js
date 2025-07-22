@@ -62,7 +62,7 @@ exports.createOrder = (req, res) => {
   });
 };
 
-
+//my orders page
 exports.getCustomerOrders = (req, res) => {
   const customer_id = req.params.customer_id;
 
@@ -84,6 +84,7 @@ exports.getCustomerOrders = (req, res) => {
     res.status(200).json({ data: result });
   });
 };
+
 
 exports.cancelOrder = (req, res) => {
   const { order_id } = req.body;
@@ -180,144 +181,7 @@ exports.getAllOrders = (req, res) => {
 };
 
 
-// exports.updateOrderStatus = (req, res) => {
-//   const { order_id, status } = req.body;
-
-//   const validStatuses = ['pending', 'received', 'cancelled', 'shipped']; // added 'shipped'
-//   if (!validStatuses.includes(status)) {
-//     return res.status(400).json({ error: 'Invalid status' });
-//   }
-
-//   const sql = `UPDATE orderinfo SET status = ? WHERE order_id = ?`;
-
-//   connection.execute(sql, [status, order_id], (err, result) => {
-//     if (err) return res.status(500).json({ error: 'Failed to update status', details: err });
-
-//     if (result.affectedRows === 0) {
-//       return res.status(404).json({ error: 'Order not found' });
-//     }
-
-//     res.status(200).json({ success: true, message: 'Status updated' });
-//   });
-// };
-
-
-// const { sendOrderStatusEmail } = require('../utils/mailer'); // import helper
-
-// exports.updateOrderStatus = (req, res) => {
-//   const { order_id, status } = req.body;
-
-//   const validStatuses = ['pending', 'received', 'cancelled', 'shipped'];
-//   if (!validStatuses.includes(status)) {
-//     return res.status(400).json({ error: 'Invalid status' });
-//   }
-
-//   // First, update the status
-//   const sql = `UPDATE orderinfo SET status = ? WHERE order_id = ?`;
-
-//   connection.execute(sql, [status, order_id], (err, result) => {
-//     if (err) return res.status(500).json({ error: 'Failed to update status', details: err });
-//     if (result.affectedRows === 0) return res.status(404).json({ error: 'Order not found' });
-
-//     // ✅ Now fetch customer email
-//     const getEmailSql = `
-//       SELECT u.email, o.order_id
-//       FROM orderinfo o
-//       JOIN users u ON o.customer_id = u.id
-//       WHERE o.order_id = ?
-//     `;
-//     connection.query(getEmailSql, [order_id], async (err2, rows) => {
-//       if (err2) {
-//         console.error('Failed to fetch customer email:', err2);
-//         return res.status(500).json({ error: 'Failed to fetch customer email' });
-//       }
-
-//       if (rows.length > 0) {
-//         const customerEmail = rows[0].email;
-
-//         try {
-//           await sendOrderStatusEmail(customerEmail, order_id, status);
-//           console.log('📧 Email sent to', customerEmail);
-//         } catch (emailErr) {
-//           console.error('❌ Failed to send email:', emailErr);
-//         }
-//       }
-
-//       return res.status(200).json({ success: true, message: 'Status updated and email sent' });
-//     });
-//   });
-// };
-
-// const { generateReceiptPDF, sendReceiptEmail } = require('../utils/mailer');
-
-// exports.updateOrderStatus = (req, res) => {
-//   const { order_id, status } = req.body;
-
-//   const validStatuses = ['pending', 'received', 'cancelled', 'shipped'];
-//   if (!validStatuses.includes(status)) {
-//     return res.status(400).json({ error: 'Invalid status' });
-//   }
-
-//   // 1. Update status
-//   connection.execute(`UPDATE orderinfo SET status = ? WHERE order_id = ?`, [status, order_id], (err, result) => {
-//     if (err) return res.status(500).json({ error: 'Failed to update status', details: err });
-//     if (result.affectedRows === 0) return res.status(404).json({ error: 'Order not found' });
-
-//     // 2. Fetch details for receipt if marked as received
-//     if (status === 'received') {
-//       const detailSql = `
-//         SELECT o.order_id, o.date_placed, o.status, u.name AS customer_name, u.email,
-//           (SELECT SUM(ol.quantity * i.sell_price)
-//            FROM orderline ol
-//            JOIN item i ON ol.item_id = i.item_id
-//            WHERE ol.orderinfo_id = o.order_id) AS total_amount
-//         FROM orderinfo o
-//         JOIN users u ON o.customer_id = u.id
-//         WHERE o.order_id = ?
-//       `;
-
-//       connection.query(detailSql, [order_id], (err2, rows) => {
-//         if (err2 || rows.length === 0) {
-//           console.error('❌ Fetch order details failed', err2);
-//           return res.status(200).json({ success: true, message: 'Status updated but receipt not sent' });
-//         }
-
-//         const order = rows[0];
-
-//         // Fetch items
-//         const itemsSql = `
-//           SELECT i.pname, ol.quantity, (ol.quantity * i.sell_price) as total_price
-//           FROM orderline ol
-//           JOIN item i ON ol.item_id = i.item_id
-//           WHERE ol.orderinfo_id = ?
-//         `;
-//         connection.query(itemsSql, [order_id], async (err3, itemRows) => {
-//           if (err3) {
-//             console.error('❌ Fetch order items failed', err3);
-//             return res.status(200).json({ success: true, message: 'Status updated but receipt not sent' });
-//           }
-
-//           order.items = itemRows;
-
-//           try {
-//             const pdfBuffer = await generateReceiptPDF(order);
-//             await sendReceiptEmail(order.email, order, pdfBuffer);
-//             console.log('📎 Receipt email sent');
-//           } catch (pdfErr) {
-//             console.error('❌ Failed to send receipt email', pdfErr);
-//           }
-
-//           return res.status(200).json({ success: true, message: 'Status updated and receipt sent' });
-//         });
-//       });
-//     } else {
-//       // If not received, just update status
-//       return res.status(200).json({ success: true, message: 'Status updated' });
-//     }
-//   });
-// };
-
-
+// may email pag inupdated status tsaka enerate receipt
 const { generateReceiptPDF, sendReceiptEmail, sendOrderStatusEmail } = require('../utils/mailer');
 
 exports.updateOrderStatus = (req, res) => {
@@ -367,6 +231,7 @@ exports.updateOrderStatus = (req, res) => {
     finalizeStatusUpdate(order_id, status, res);
   }
 };
+
 
 // ✅ Helper function to finalize status update and send emails
 function finalizeStatusUpdate(order_id, status, res) {

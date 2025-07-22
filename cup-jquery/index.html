@@ -89,7 +89,7 @@
     $('#header').load('header.html');
 
     let allItems = []; // global array to store all items
-
+    // Fetch all items on page load sa index
     $(document).ready(function () {
       $.get('/api/v1/items', function (response) {
         allItems = response.data || [];
@@ -160,7 +160,7 @@
   renderItems(filtered);
 }
 
-
+  //eto yung naddouble tap
     // Show item details (already in your original script)
     function showItemDetails(itemId) {
       $.get(`/api/v1/items/${itemId}/details`, function(res) {

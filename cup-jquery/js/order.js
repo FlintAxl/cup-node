@@ -1,6 +1,8 @@
 // const url = 'http://localhost:4000/';
 const userId = sessionStorage.getItem('userId');
 
+
+//my orders page
 $(document).ready(function () {
   const token = sessionStorage.getItem('access_token');
     const userId = sessionStorage.getItem('userId');

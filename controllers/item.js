@@ -195,7 +195,7 @@ exports.getCategories = (req, res) => {
 
 
 
-
+//pag display ng item with reviews sa index.html
 exports.getItemWithReviews = (req, res) => {
   const itemId = req.params.id;
 

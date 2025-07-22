@@ -1,7 +1,10 @@
 const multer = require("multer");
 const path = require("path");
 
-
+// Configure multer storage settings
+// This will save uploaded files in the 'images' directory
+// and rename them to include a unique suffix to avoid conflicts
+// It will also ensure that the file extension is preserved
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
         cb(null, 'images');
@@ -15,7 +18,9 @@ const storage = multer.diskStorage({
        
     }
 });
-
+// Configure multer to use the storage settings
+// and to filter file types
+// This will only allow .jpg, .jpeg, and .png files
 module.exports = multer({
     storage: storage,
 

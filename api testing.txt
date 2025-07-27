@@ -1,0 +1,32 @@
+LOGIN(POST)
+
+http://localhost:4000/api/v1/login
+
+BODY->JSON
+
+{
+ 
+  "email": "flintaxl.celetaria@gmail.com",
+  "password": "123"
+}
+
+
+TEST PROTECTED ROUTES SA ITEM(POST)
+
+http://localhost:4000/api/v1/items
+
+HEADERS-> 
+
+Content-Type      multipart/form-data
+Authorization     Bearer eyJhbsdciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwicm9sZSI6ImN1c3RvbWVyIiwiaWF0IjoxNzUyOTE5MTc4fQ.jQa7GWuwSlb1425dh071wLjCkmfR7AiWvDIpVyMmgKs
+
+
+BODY->FORM DATA -> MULTIPART
+
+pname		()	text
+description	()	text
+cost_price	()	text
+sell_price	()	text
+stock		()	text
+category_id	()	text						
+image		()	 file	

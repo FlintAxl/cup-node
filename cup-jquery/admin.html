@@ -306,7 +306,9 @@
       }).then(() => {
         window.location.href = 'login.html'; // Or redirect to home page
       });
+      return false
     }
+    return true
   }
 
   $(document).ready(function () {

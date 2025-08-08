@@ -28,6 +28,7 @@ GROUP BY i.item_id
 
 
 
+
 exports.getSingleItem = (req, res) => {
     const sql = 'SELECT * FROM item WHERE item_id = ?';
     const values = [parseInt(req.params.id)];

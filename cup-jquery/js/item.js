@@ -71,48 +71,41 @@ $(document).ready(function () {
     });
 
     $("#itemSubmit").on('click', function (e) {
-        e.preventDefault();
+    e.preventDefault();
 
-        const selectedCategory = $('#category_id').val();
-        if (!selectedCategory) {
+    if (!validateItemForm(false)) return; // validation for new item
+
+    let form = $('#iform')[0];
+    let formData = new FormData(form);
+
+    $.ajax({
+        method: "POST",
+        url: `${url}api/v1/items`,
+        data: formData,
+        contentType: false,
+        processData: false,
+        headers: {
+            Authorization: `Bearer ${token}`
+        },
+        success: function () {
             Swal.fire({
-                icon: 'warning',
-                text: 'Please select a category before saving.'
+                icon: "success",
+                text: "Item created successfully!",
+                timer: 1000,
+                showConfirmButton: false
             });
-            return;
+            $("#itemModal").modal("hide");
+            table.ajax.reload();
+        },
+        error: function (error) {
+            console.log(error);
+            Swal.fire({
+                icon: "error",
+                text: error.responseJSON?.error || "Failed to save item."
+            });
         }
-
-        let form = $('#iform')[0];
-        let formData = new FormData(form);
-
-        $.ajax({
-            method: "POST",
-            url: `${url}api/v1/items`,
-            data: formData,
-            contentType: false,
-            processData: false,
-            headers: {
-                Authorization: `Bearer ${token}`
-            },
-            success: function () {
-                Swal.fire({
-                    icon: "success",
-                    text: "Item created successfully!",
-                    timer: 1000,
-                    showConfirmButton: false
-                });
-                $("#itemModal").modal("hide");
-                table.ajax.reload();
-            },
-            error: function (error) {
-                console.log(error);
-                Swal.fire({
-                    icon: "error",
-                    text: error.responseJSON?.error || "Failed to save item."
-                });
-            }
-        });
     });
+});
 
     // Fix for Add Item button that directly opens the modal from HTML
 $('#openItemModal').on('click', function () {
@@ -121,84 +114,90 @@ $('#openItemModal').on('click', function () {
 });
 
 
-    $('#itable tbody').on('click', '.editBtn', function (e) {
-        e.preventDefault();
-        resetItemForm();
+   // Make sure this is outside DataTable initialization but still in $(document).ready
+$(document).on('click', '.editBtn', function (e) {
+    e.preventDefault();
+    e.stopPropagation(); // Prevent parent click handlers from firing
 
-        const id = $(this).data('id');
-        $('#itemSubmit').hide();
-        $('#itemUpdate').show();
+    resetItemForm();
 
-        $.ajax({
-            method: "GET",
-            url: `${url}api/v1/items/${id}`,
-            dataType: "json",
-            success: function (data) {
-                const { result } = data;
-                if (!result || result.length === 0) return;
+    const id = $(this).data('id');
+    $('#itemSubmit').hide();
+    $('#itemUpdate').show();
 
-                const item = result[0];
-                $('#pname').val(item.pname);
-                $('#desc').val(item.description);
-                $('#sell').val(item.sell_price);
-                $('#cost').val(item.cost_price);
-                $('#stock').val(item.stock);
-                $('<input>').attr({ type: 'hidden', id: 'itemId', name: 'item_id', value: id }).appendTo('#iform');
+    $.ajax({
+        method: "GET",
+        url: `${url}api/v1/items/${id}`,
+        dataType: "json",
+        success: function (data) {
+            const { result } = data;
+            if (!result || result.length === 0) return;
 
-                loadCategories(function () {
-                    $('#category_id').val(item.category_id);
+            const item = result[0];
+            $('#pname').val(item.pname);
+            $('#desc').val(item.description);
+            $('#sell').val(item.sell_price);
+            $('#cost').val(item.cost_price);
+            $('#stock').val(item.stock);
+            $('<input>').attr({ type: 'hidden', id: 'itemId', name: 'item_id', value: id }).appendTo('#iform');
+
+            loadCategories(function () {
+                $('#category_id').val(item.category_id);
+            });
+
+            if (item.images && item.images.length > 0) {
+                item.images.forEach((img) => {
+                    $("#iform").append(`<img src="${url}${img}" width='100px' height='100px' style="margin:5px;" class="itemImagePreview" />`);
                 });
-
-                if (item.images && item.images.length > 0) {
-                    item.images.forEach((img) => {
-                        $("#iform").append(`<img src="${url}${img}" width='100px' height='100px' style="margin:5px;" class="itemImagePreview" />`);
-                    });
-                }
-
-                $('#itemModal').modal('show');
-            },
-            error: function (error) {
-                console.log(error);
-                Swal.fire({ icon: "error", text: "Failed to fetch item details." });
             }
-        });
+
+            $('#itemModal').modal('show');
+        },
+        error: function (error) {
+            console.log(error);
+            Swal.fire({ icon: "error", text: "Failed to fetch item details." });
+        }
     });
+});
+
 
     $("#itemUpdate").on('click', function (e) {
-        e.preventDefault();
-        const id = $('#itemId').val();
-        let form = $('#iform')[0];
-        let formData = new FormData(form);
+    e.preventDefault();
 
-        $.ajax({
-            method: "PUT",
-            url: `${url}api/v1/items/${id}`,
-            data: formData,
-            contentType: false,
-            processData: false,
-            headers: {
-                Authorization: `Bearer ${token}`
-            },
-            success: function () {
-                Swal.fire({
-                    icon: "success",
-                    text: "Item updated successfully!",
-                    timer: 1000,
-                    showConfirmButton: false
-                });
-                $('#itemModal').modal("hide");
-                table.ajax.reload();
-            },
-            error: function (error) {
-                console.log(error);
-                Swal.fire({
-                    icon: "error",
-                    text: error.responseJSON?.error || "Failed to update item."
-                });
-            }
-        });
+    if (!validateItemForm(true)) return; // validation for update
+
+    const id = $('#itemId').val();
+    let form = $('#iform')[0];
+    let formData = new FormData(form);
+
+    $.ajax({
+        method: "PUT",
+        url: `${url}api/v1/items/${id}`,
+        data: formData,
+        contentType: false,
+        processData: false,
+        headers: {
+            Authorization: `Bearer ${token}`
+        },
+        success: function () {
+            Swal.fire({
+                icon: "success",
+                text: "Item updated successfully!",
+                timer: 1000,
+                showConfirmButton: false
+            });
+            $('#itemModal').modal("hide");
+            table.ajax.reload();
+        },
+        error: function (error) {
+            console.log(error);
+            Swal.fire({
+                icon: "error",
+                text: error.responseJSON?.error || "Failed to update item."
+            });
+        }
     });
-
+});
     $('#itable tbody').on('click', '.deletebtn', function (e) {
         e.preventDefault();
         const id = $(this).data('id');
@@ -380,6 +379,48 @@ function filterItems(category) {
     renderItems(filtered);
   }
 }
+
+function validateItemForm(isUpdate = false) {
+    let errors = [];
+
+    const pname = $('#pname').val().trim();
+    const desc = $('#desc').val().trim();
+    const sellPrice = $('#sell').val().trim();
+    const costPrice = $('#cost').val().trim();
+    const stock = $('#stock').val().trim();
+    const category = $('#category_id').val();
+    const image = $('#img').val().trim();
+
+    if (!pname) errors.push("Product name is required.");
+    if (!desc) errors.push("Description is required.");
+
+    if (!sellPrice || isNaN(sellPrice) || parseFloat(sellPrice) <= 0) {
+        errors.push("Enter a valid selling price.");
+    }
+    if (!costPrice || isNaN(costPrice) || parseFloat(costPrice) <= 0) {
+        errors.push("Enter a valid cost price.");
+    }
+    if (!stock || isNaN(stock) || !Number.isInteger(parseFloat(stock)) || parseInt(stock) < 0) {
+        errors.push("Enter a valid stock quantity.");
+    }
+
+    if (!category) errors.push("Please select a category.");
+
+    // Image required only when adding new item
+    if (!isUpdate && !image) errors.push("Please upload an image.");
+
+    if (errors.length > 0) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Validation Error',
+            html: errors.join('<br>')
+        });
+        return false;
+    }
+
+    return true;
+}
+
 
 // // 🔎 Live search/autocomplete
 // $('#searchBox').on('keyup', function () {
